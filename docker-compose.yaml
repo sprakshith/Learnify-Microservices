@@ -1,0 +1,51 @@
+services:
+  discovery-service:
+    build:
+      context: ./discovery-service
+      dockerfile: Dockerfile
+    image: rakshith0908/learnify-discovery-service:latest
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/eureka/apps"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    image: rakshith0908/learnify-api-gateway:latest
+    ports:
+      - "8080:8080"
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    image: rakshith0908/learnify-user-service:latest
+    environment:
+      - SECRET_KEY=88kAMDtEFozukL7INMMq4pHSC33gybuXu7MzpHMkEu3NbItS3kLFAoDgC8qX4y8M
+      - MYSQL_DB=authentication
+      - MYSQL_HOST=mysql_db
+      - MYSQL_PORT=3306
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+      mysql_db:
+        condition: service_started
+  mysql_db:
+    image: mysql:8.0
+    ports:
+      - "3300:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=authentication
+    volumes:
+      - mysql_data:/var/lib/mysql
+volumes:
+  mysql_data:
