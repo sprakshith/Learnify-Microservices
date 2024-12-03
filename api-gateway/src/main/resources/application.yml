@@ -11,7 +11,7 @@ spring:
         - id: course-service
           uri: lb://course-service
           predicates:
-            - Path=/api/v1/courses,/api/v1/courses/**,/api/v1/reviews,/api/v1/reviews/**,/api/v1/materials,/api/v1/materials/**
+            - Path=/api/v1/courses,/api/v1/courses/**
 eureka:
   client:
     serviceUrl:
