@@ -8,6 +8,10 @@ spring:
           uri: lb://user-service
           predicates:
             - Path=/api/v1/authentication/**
+        - id: course-service
+          uri: lb://course-service
+          predicates:
+            - Path=/api/v1/courses,/api/v1/courses/**,/api/v1/reviews,/api/v1/reviews/**,/api/v1/materials,/api/v1/materials/**
 eureka:
   client:
     serviceUrl:

@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: course-service
+  data:
+    mongodb:
+      uri: mongodb://${MONGO_USERNAME}:${MONGO_PW}@${MONGO_HOST}:${MONGO_PORT}/${MONGO_DATABASE}?authSource=admin
+server:
+  port: 0
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://discovery-service:8761/eureka
