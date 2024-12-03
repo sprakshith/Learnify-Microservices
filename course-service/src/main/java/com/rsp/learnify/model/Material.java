@@ -1,6 +1,6 @@
 package com.rsp.learnify.model;
 
-import java.util.Date;
+import java.time.Instant;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -23,7 +23,7 @@ public class Material {
     private String type;
     private String fileName;
     private String fileId;
-    private Date createdDate;
-    private Date updatedDate;
+    private Instant createdDate;
+    private Instant updatedDate;
 
 }

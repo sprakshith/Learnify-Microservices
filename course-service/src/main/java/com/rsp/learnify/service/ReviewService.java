@@ -26,12 +26,19 @@ public class ReviewService {
 
     private final ReviewRepository reviewRepository;
 
-    public void createReview(ReviewRequest reviewRequest) {
-        Course course = courseRepository.findById(reviewRequest.getCourseId())
-                .orElseThrow(() -> new RuntimeException("Course not found"));
+    public void createReview(String courseId, ReviewRequest reviewRequest) throws Exception {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Course not found!"));
+
+        Review existingReview = reviewRepository.findByCourseIdAndStudentId(courseId, 1)
+                .orElse(null); // TODO: Hardcoded for now
+
+        if (existingReview != null) {
+            throw new RuntimeException("Review already exists for this course!");
+        }
 
         Review review = Review.builder()
-                .courseId(reviewRequest.getCourseId())
+                .courseId(courseId)
                 .studentId(1) // TODO: Hardcoded for now
                 .rating(reviewRequest.getRating())
                 .comment(reviewRequest.getComment())
@@ -56,8 +63,8 @@ public class ReviewService {
         return reviews.stream().map(this::mapToReviewResponse).toList();
     }
 
-    public void updateReview(String id, ReviewRequest reviewRequest) {
-        Review review = reviewRepository.findById(id).orElseThrow();
+    public void updateReview(String reviewId, ReviewRequest reviewRequest) {
+        Review review = reviewRepository.findById(reviewId).orElseThrow();
 
         review.setRating(reviewRequest.getRating());
         review.setComment(reviewRequest.getComment());
@@ -66,11 +73,11 @@ public class ReviewService {
         reviewRepository.save(review);
     }
 
-    public void deleteReview(String reviewId) {
+    public void deleteReview(String courseId, String reviewId) {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new RuntimeException("Review not found"));
 
-        Course course = courseRepository.findById(review.getCourseId())
+        Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new RuntimeException("Course not found"));
 
         course.getReviews().remove(review);
