@@ -26,7 +26,14 @@ public class ReviewService {
 
     private final ReviewRepository reviewRepository;
 
+    private final RoleService roleService;
+
     public void createReview(String courseId, ReviewRequest reviewRequest) throws Exception {
+
+        if (!roleService.isStudent()) {
+            throw new Exception("Unauthorized access! Only students can add a review.");
+        }
+
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new RuntimeException("Course not found!"));
 
@@ -63,7 +70,11 @@ public class ReviewService {
         return reviews.stream().map(this::mapToReviewResponse).toList();
     }
 
-    public void updateReview(String reviewId, ReviewRequest reviewRequest) {
+    public void updateReview(String reviewId, ReviewRequest reviewRequest) throws Exception {
+        if (!roleService.isStudent()) {
+            throw new Exception("Unauthorized access! Only students can edit a review.");
+        }
+
         Review review = reviewRepository.findById(reviewId).orElseThrow();
 
         review.setRating(reviewRequest.getRating());
@@ -73,7 +84,12 @@ public class ReviewService {
         reviewRepository.save(review);
     }
 
-    public void deleteReview(String courseId, String reviewId) {
+    public void deleteReview(String courseId, String reviewId) throws Exception {
+
+        if (!roleService.isStudent()) {
+            throw new Exception("Unauthorized access! Only students can delete a review.");
+        }
+
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new RuntimeException("Review not found"));
 

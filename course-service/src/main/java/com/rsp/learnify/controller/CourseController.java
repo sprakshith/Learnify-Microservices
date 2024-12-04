@@ -100,13 +100,21 @@ public class CourseController {
     @PutMapping("/{courseId}/reviews/{reviewId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void updateReview(@PathVariable String reviewId, @RequestBody ReviewRequest reviewRequest) {
-        reviewService.updateReview(reviewId, reviewRequest);
+        try {
+            reviewService.updateReview(reviewId, reviewRequest);
+        } catch (Exception e) {
+            // TODO: LATER
+        }
     }
 
     @DeleteMapping("/{courseId}/reviews/{reviewId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteReview(@PathVariable String courseId, @PathVariable String reviewId) {
-        reviewService.deleteReview(courseId, reviewId);
+        try {
+            reviewService.deleteReview(courseId, reviewId);
+        } catch (Exception e) {
+            // TODO: LATER
+        }
     }
 
 }

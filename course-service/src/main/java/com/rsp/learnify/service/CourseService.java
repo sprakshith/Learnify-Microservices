@@ -25,12 +25,18 @@ public class CourseService {
 
     private final ReviewService reviewService;
 
+    private final RoleService roleService;
+
     public String createCourse(CourseRequest courseRequest) throws Exception {
+        if (!roleService.isTeacher()) {
+            throw new Exception("Unauthorized access! Only teachers can create courses.");
+        }
+
         try {
             Course course = Course.builder()
                     .title(courseRequest.getTitle())
                     .description(courseRequest.getDescription())
-                    .teacherId(courseRequest.getTeacherId())
+                    .teacherId(courseRequest.getTeacherId()) // TODO: Get teacher ID from token
                     .createdDate(Instant.now())
                     .updatedDate(Instant.now())
                     .build();

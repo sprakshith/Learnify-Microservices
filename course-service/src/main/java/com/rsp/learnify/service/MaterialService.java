@@ -41,7 +41,13 @@ public class MaterialService {
 
         private final MaterialRepository materialRepository;
 
+        private final RoleService roleService;
+
         public void storeMaterial(String courseId, MultipartFile file) throws Exception {
+
+                if (!roleService.isTeacher()) {
+                        throw new Exception("Unauthorized access! Only teachers can create courses.");
+                }
 
                 Course course = courseRepository.findById(courseId)
                                 .orElseThrow(() -> new RuntimeException("Course not found!"));
@@ -90,6 +96,11 @@ public class MaterialService {
 
         public ResponseEntity<InputStreamResource> downloadMaterial(@PathVariable String courseId,
                         @PathVariable String materialId) throws Exception {
+
+                if (!(roleService.isTeacher() || roleService.isStudent())) {
+                        throw new Exception("Unauthorized access! Only teachers and students can download materials.");
+                }
+
                 Material material = materialRepository.findById(materialId)
                                 .orElseThrow(() -> new RuntimeException("Material not found!"));
 
@@ -106,7 +117,12 @@ public class MaterialService {
                                 .body(new InputStreamResource(inputStream));
         }
 
-        public void deleteMaterial(String courseId, String materialId) {
+        public void deleteMaterial(String courseId, String materialId) throws Exception {
+
+                if (!roleService.isTeacher()) {
+                        throw new Exception("Unauthorized access! Only teachers can delete materials.");
+                }
+
                 Course course = courseRepository.findById(courseId)
                                 .orElseThrow(() -> new RuntimeException("Course not found!"));
 
