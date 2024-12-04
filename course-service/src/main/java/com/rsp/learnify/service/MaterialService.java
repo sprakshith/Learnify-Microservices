@@ -41,11 +41,11 @@ public class MaterialService {
 
         private final MaterialRepository materialRepository;
 
-        private final RoleService roleService;
+        private final UserService userService;
 
         public void storeMaterial(String courseId, MultipartFile file) throws Exception {
 
-                if (!roleService.isTeacher()) {
+                if (!userService.isTeacher()) {
                         throw new Exception("Unauthorized access! Only teachers can create courses.");
                 }
 
@@ -97,7 +97,7 @@ public class MaterialService {
         public ResponseEntity<InputStreamResource> downloadMaterial(@PathVariable String courseId,
                         @PathVariable String materialId) throws Exception {
 
-                if (!(roleService.isTeacher() || roleService.isStudent())) {
+                if (!(userService.isTeacher() || userService.isStudent())) {
                         throw new Exception("Unauthorized access! Only teachers and students can download materials.");
                 }
 
@@ -119,7 +119,7 @@ public class MaterialService {
 
         public void deleteMaterial(String courseId, String materialId) throws Exception {
 
-                if (!roleService.isTeacher()) {
+                if (!userService.isTeacher()) {
                         throw new Exception("Unauthorized access! Only teachers can delete materials.");
                 }
 

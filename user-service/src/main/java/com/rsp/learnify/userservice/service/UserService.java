@@ -2,10 +2,15 @@ package com.rsp.learnify.userservice.service;
 
 import org.springframework.stereotype.Service;
 
+import com.rsp.learnify.userservice.dto.UserResponse;
+import com.rsp.learnify.userservice.model.Enrolment;
 import com.rsp.learnify.userservice.model.Role;
 import com.rsp.learnify.userservice.model.User;
+import com.rsp.learnify.userservice.repository.EnrolmentRepository;
 import com.rsp.learnify.userservice.repository.UserRepository;
 
+import jakarta.persistence.PersistenceException;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -14,10 +19,22 @@ public class UserService {
 
     private final UserRepository userRepository;
 
+    private final EnrolmentRepository enrolmentRepository;
+
     private final JwtService jwtService;
 
-    private boolean hasRole(String jwt, Role role) {
-        String email = jwtService.extractUsername(jwt);
+    private final HttpServletRequest httpRequest;
+
+    private boolean hasRole(Role role) throws Exception {
+        String token;
+
+        try {
+            token = httpRequest.getHeader("Authorization").substring(7);
+        } catch (Exception e) {
+            throw new Exception("Authentication token not found!");
+        }
+
+        String email = jwtService.extractUsername(token);
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found!"));
@@ -25,16 +42,66 @@ public class UserService {
         return user.getRole().equals(role);
     }
 
-    public boolean isAdmin(String jwt) {
-        return hasRole(jwt, Role.ADMIN);
+    public boolean isAdmin() throws Exception {
+        return hasRole(Role.ADMIN);
     }
 
-    public boolean isTeacher(String jwt) {
-        return hasRole(jwt, Role.TEACHER);
+    public boolean isTeacher() throws Exception {
+        return hasRole(Role.TEACHER);
     }
 
-    public boolean isStudent(String jwt) {
-        return hasRole(jwt, Role.STUDENT);
+    public boolean isStudent() throws Exception {
+        return hasRole(Role.STUDENT);
+    }
+
+    public void enrol(String courseId) throws Exception {
+        String token;
+
+        try {
+            token = httpRequest.getHeader("Authorization").substring(7);
+        } catch (Exception e) {
+            throw new Exception("Authentication token not found!");
+        }
+
+        String email = jwtService.extractUsername(token);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found!"));
+
+        try {
+            Enrolment enrolment = Enrolment.builder()
+                    .courseId(courseId)
+                    .studentId(user.getId())
+                    .build();
+
+            enrolmentRepository.save(enrolment);
+        } catch (PersistenceException e) {
+            throw new Exception("You are already enrolled in this course!");
+        } catch (Exception e) {
+            throw new Exception(e.getMessage());
+        }
+    }
+
+    public UserResponse getUserDetails() throws Exception {
+        String token;
+
+        try {
+            token = httpRequest.getHeader("Authorization").substring(7);
+        } catch (Exception e) {
+            throw new Exception("Authentication token not found!");
+        }
+
+        String email = jwtService.extractUsername(token);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found!"));
+
+        return UserResponse.builder()
+                .id(user.getId())
+                .firstname(user.getFirstname())
+                .lastname(user.getLastname())
+                .email(user.getEmail())
+                .build();
     }
 
 }

@@ -1,7 +1,6 @@
 package com.rsp.learnify.dto;
 
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,6 +18,4 @@ public class CourseRequest {
     @NotEmpty
     private String description;
 
-    @NotNull
-    private Integer teacherId;
 }

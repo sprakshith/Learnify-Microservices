@@ -6,6 +6,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
@@ -26,19 +27,22 @@ public class ReviewService {
 
     private final ReviewRepository reviewRepository;
 
-    private final RoleService roleService;
+    private final UserService userService;
 
     public void createReview(String courseId, ReviewRequest reviewRequest) throws Exception {
 
-        if (!roleService.isStudent()) {
+        if (!userService.isStudent()) {
             throw new Exception("Unauthorized access! Only students can add a review.");
         }
+
+        Map<String, Object> userDetails = userService.getUserDetails();
+        Integer userId = Integer.parseInt(userDetails.get("id").toString());
 
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new RuntimeException("Course not found!"));
 
-        Review existingReview = reviewRepository.findByCourseIdAndStudentId(courseId, 1)
-                .orElse(null); // TODO: Hardcoded for now
+        Review existingReview = reviewRepository.findByCourseIdAndStudentId(courseId, userId)
+                .orElse(null);
 
         if (existingReview != null) {
             throw new RuntimeException("Review already exists for this course!");
@@ -46,7 +50,7 @@ public class ReviewService {
 
         Review review = Review.builder()
                 .courseId(courseId)
-                .studentId(1) // TODO: Hardcoded for now
+                .studentId(userId)
                 .rating(reviewRequest.getRating())
                 .comment(reviewRequest.getComment())
                 .createdDate(Instant.now())
@@ -71,7 +75,7 @@ public class ReviewService {
     }
 
     public void updateReview(String reviewId, ReviewRequest reviewRequest) throws Exception {
-        if (!roleService.isStudent()) {
+        if (!userService.isStudent()) {
             throw new Exception("Unauthorized access! Only students can edit a review.");
         }
 
@@ -86,7 +90,7 @@ public class ReviewService {
 
     public void deleteReview(String courseId, String reviewId) throws Exception {
 
-        if (!roleService.isStudent()) {
+        if (!userService.isStudent()) {
             throw new Exception("Unauthorized access! Only students can delete a review.");
         }
 

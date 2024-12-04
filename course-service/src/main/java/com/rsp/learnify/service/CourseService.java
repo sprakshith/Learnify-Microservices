@@ -5,6 +5,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
@@ -25,18 +26,20 @@ public class CourseService {
 
     private final ReviewService reviewService;
 
-    private final RoleService roleService;
+    private final UserService userService;
 
     public String createCourse(CourseRequest courseRequest) throws Exception {
-        if (!roleService.isTeacher()) {
+        if (!userService.isTeacher()) {
             throw new Exception("Unauthorized access! Only teachers can create courses.");
         }
+
+        Map<String, Object> userDetails = userService.getUserDetails();
 
         try {
             Course course = Course.builder()
                     .title(courseRequest.getTitle())
                     .description(courseRequest.getDescription())
-                    .teacherId(courseRequest.getTeacherId()) // TODO: Get teacher ID from token
+                    .teacherId(Integer.parseInt(userDetails.get("id").toString()))
                     .createdDate(Instant.now())
                     .updatedDate(Instant.now())
                     .build();
