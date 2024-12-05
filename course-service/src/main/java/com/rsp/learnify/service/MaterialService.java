@@ -7,6 +7,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.bson.types.ObjectId;
 import org.springframework.core.io.InputStreamResource;
@@ -45,12 +46,19 @@ public class MaterialService {
 
         public void storeMaterial(String courseId, MultipartFile file) throws Exception {
 
-                if (!userService.isTeacher()) {
-                        throw new Exception("Unauthorized access! Only teachers can create courses.");
-                }
+                Map<String, Object> userDetails = userService.getUserDetails();
 
                 Course course = courseRepository.findById(courseId)
-                                .orElseThrow(() -> new RuntimeException("Course not found!"));
+                                .orElseThrow(() -> new RuntimeException(
+                                                String.format("Course with id '%s' not found!", courseId)));
+
+                if (!userService.isTeacher()) {
+                        throw new Exception(
+                                        "Unauthorized access! Only teachers are allowed to add materials to their courses.");
+                } else if (!(course.getTeacherId() == Integer.parseInt(userDetails.get("id").toString()))) {
+                        throw new Exception(
+                                        "Unauthorized access! Only course owners are allowed to add materials to their course.");
+                }
 
                 try (InputStream inputStream = file.getInputStream()) {
                         GridFSUploadOptions options = new GridFSUploadOptions()
@@ -81,7 +89,7 @@ public class MaterialService {
                 }
         }
 
-        public List<MaterialResponse> getMaterialsByCourseId(String courseId) {
+        public List<MaterialResponse> getMaterialsByCourseId(String courseId) throws Exception {
                 Course course = courseRepository.findById(courseId)
                                 .orElseThrow(() -> new RuntimeException("Course not found!"));
 
@@ -97,8 +105,27 @@ public class MaterialService {
         public ResponseEntity<InputStreamResource> downloadMaterial(@PathVariable String courseId,
                         @PathVariable String materialId) throws Exception {
 
-                if (!(userService.isTeacher() || userService.isStudent())) {
-                        throw new Exception("Unauthorized access! Only teachers and students can download materials.");
+                Map<String, Object> userDetails = userService.getUserDetails();
+
+                Course course = courseRepository.findById(courseId)
+                                .orElseThrow(() -> new RuntimeException("Course not found!"));
+
+                if (userService.isStudent()) {
+                        List<String> enrolledCourses = userService.getEnrolledCourses();
+
+                        if (!enrolledCourses.contains(courseId)) {
+                                throw new Exception(
+                                                "Unauthorized access! You are not enrolled in this course. Please enroll to access materials.");
+                        }
+
+                } else if (userService.isTeacher()) {
+                        if (course.getTeacherId() != Integer.parseInt(userDetails.get("id").toString())) {
+                                throw new Exception(
+                                                "Unauthorized access! Only course owners are allowed to access materials.");
+                        }
+                } else {
+                        throw new Exception(
+                                        "Unauthorized access! Only teachers and students are allowed to access materials.");
                 }
 
                 Material material = materialRepository.findById(materialId)
@@ -108,6 +135,7 @@ public class MaterialService {
                                 .findOne(new Query(Criteria.where("_id").is(material.getFileId())));
 
                 GridFsResource resource = gridFsTemplate.getResource(gridFSFile);
+
                 InputStream inputStream = resource.getInputStream();
 
                 return ResponseEntity.ok()

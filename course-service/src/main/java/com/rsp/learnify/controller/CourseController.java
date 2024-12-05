@@ -1,5 +1,6 @@
 package com.rsp.learnify.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.core.io.InputStreamResource;
@@ -27,7 +28,9 @@ import com.rsp.learnify.service.MaterialService;
 import com.rsp.learnify.service.ReviewService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/courses")
@@ -54,6 +57,26 @@ public class CourseController {
         return courseService.getAllCourses();
     }
 
+    @GetMapping("/my-courses")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<List<CourseResponse>> getMyCourses() {
+        try {
+            return new ResponseEntity<>(courseService.getMyCourses(), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new ArrayList<>(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @GetMapping("/enrolled-courses")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<List<CourseResponse>> getEnrolledCourses() {
+        try {
+            return new ResponseEntity<>(courseService.getEnrolledCourses(), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new ArrayList<>(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
     @PostMapping("/{courseId}/materials/upload")
     public ResponseEntity<String> uploadFile(@PathVariable String courseId, @RequestParam("file") MultipartFile file) {
         try {
@@ -66,7 +89,11 @@ public class CourseController {
 
     @GetMapping("/{courseId}/materials")
     public List<MaterialResponse> getMaterialsByCourseId(@PathVariable String courseId) {
-        return materialService.getMaterialsByCourseId(courseId);
+        try {
+            return materialService.getMaterialsByCourseId(courseId);
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
     }
 
     @GetMapping("/{courseId}/materials/download/{materialId}")
@@ -75,6 +102,7 @@ public class CourseController {
         try {
             return materialService.downloadMaterial(courseId, materialId);
         } catch (Exception e) {
+            log.error(e.getMessage());
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
@@ -98,22 +126,23 @@ public class CourseController {
     }
 
     @PutMapping("/{courseId}/reviews/{reviewId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateReview(@PathVariable String reviewId, @RequestBody ReviewRequest reviewRequest) {
+    public ResponseEntity<String> updateReview(@PathVariable String courseId, @PathVariable String reviewId,
+            @RequestBody ReviewRequest reviewRequest) {
         try {
-            reviewService.updateReview(reviewId, reviewRequest);
+            reviewService.updateReview(courseId, reviewId, reviewRequest);
+            return new ResponseEntity<>("Successfully updated your review!", HttpStatus.NO_CONTENT);
         } catch (Exception e) {
-            // TODO: LATER
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
 
     @DeleteMapping("/{courseId}/reviews/{reviewId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteReview(@PathVariable String courseId, @PathVariable String reviewId) {
+    public ResponseEntity<String> deleteReview(@PathVariable String courseId, @PathVariable String reviewId) {
         try {
             reviewService.deleteReview(courseId, reviewId);
+            return new ResponseEntity<>("Successfully deleted your review!", HttpStatus.NO_CONTENT);
         } catch (Exception e) {
-            // TODO: LATER
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
 

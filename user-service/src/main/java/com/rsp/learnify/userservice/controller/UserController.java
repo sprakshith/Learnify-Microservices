@@ -1,8 +1,11 @@
 package com.rsp.learnify.userservice.controller;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -56,12 +59,21 @@ public class UserController {
     }
 
     @PostMapping("/enrol/{courseId}")
-    public ResponseEntity<String> enrol(String courseId) {
+    public ResponseEntity<String> enrol(@PathVariable String courseId) {
         try {
             userService.enrol(courseId);
             return ResponseEntity.ok("Enrolled successfully!");
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/get-enrolled-courses")
+    public ResponseEntity<List<String>> getEnrolledCourses() {
+        try {
+            return ResponseEntity.ok(userService.getEnrolledCourses());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(null);
         }
     }
 

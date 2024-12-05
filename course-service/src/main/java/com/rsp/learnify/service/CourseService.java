@@ -6,6 +6,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
@@ -85,6 +86,22 @@ public class CourseService {
         ZonedDateTime userLocalTime = utcDateTime.atZone(userZoneId);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         return userLocalTime.format(formatter);
+    }
+
+    public List<CourseResponse> getMyCourses() throws Exception {
+        Map<String, Object> userDetails = userService.getUserDetails();
+
+        List<Course> courses = courseRepository.findByTeacherId(Integer.parseInt(userDetails.get("id").toString()));
+
+        return courses.stream().map(this::mapToCourseResponse).toList();
+    }
+
+    public List<CourseResponse> getEnrolledCourses() throws Exception {
+        List<String> courseIds = userService.getEnrolledCourses();
+
+        List<Optional<Course>> courses = courseIds.stream().map(courseRepository::findById).toList();
+
+        return courses.stream().filter(Optional::isPresent).map(course -> mapToCourseResponse(course.get())).toList();
     }
 
 }

@@ -31,7 +31,14 @@ public class ReviewService {
 
     public void createReview(String courseId, ReviewRequest reviewRequest) throws Exception {
 
-        if (!userService.isStudent()) {
+        if (userService.isStudent()) {
+            List<String> enrolledCourses = userService.getEnrolledCourses();
+
+            if (!enrolledCourses.contains(courseId)) {
+                throw new Exception(
+                        "Unauthorized access! You are not enrolled in this course. Please enroll and go through the course before adding a review.");
+            }
+        } else {
             throw new Exception("Unauthorized access! Only students can add a review.");
         }
 
@@ -74,12 +81,21 @@ public class ReviewService {
         return reviews.stream().map(this::mapToReviewResponse).toList();
     }
 
-    public void updateReview(String reviewId, ReviewRequest reviewRequest) throws Exception {
-        if (!userService.isStudent()) {
-            throw new Exception("Unauthorized access! Only students can edit a review.");
-        }
+    public void updateReview(String courseId, String reviewId, ReviewRequest reviewRequest) throws Exception {
+        Review review = null;
 
-        Review review = reviewRepository.findById(reviewId).orElseThrow();
+        Map<String, Object> userDetails = userService.getUserDetails();
+
+        if (userService.isStudent()) {
+            review = reviewRepository.findById(reviewId).orElseThrow(() -> new RuntimeException("Review not found!"));
+
+            if (review.getStudentId() != Integer.parseInt(userDetails.get("id").toString())) {
+                throw new Exception("Unauthorized access! You can only edit your review.");
+            }
+
+        } else {
+            throw new Exception("Unauthorized access! Only students can edit their review.");
+        }
 
         review.setRating(reviewRequest.getRating());
         review.setComment(reviewRequest.getComment());
@@ -90,12 +106,20 @@ public class ReviewService {
 
     public void deleteReview(String courseId, String reviewId) throws Exception {
 
-        if (!userService.isStudent()) {
-            throw new Exception("Unauthorized access! Only students can delete a review.");
-        }
+        Review review = null;
 
-        Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new RuntimeException("Review not found"));
+        Map<String, Object> userDetails = userService.getUserDetails();
+
+        if (userService.isStudent()) {
+            review = reviewRepository.findById(reviewId).orElseThrow(() -> new RuntimeException("Review not found!"));
+
+            if (review.getStudentId() != Integer.parseInt(userDetails.get("id").toString())) {
+                throw new Exception("Unauthorized access! You can only delete your review.");
+            }
+
+        } else {
+            throw new Exception("Unauthorized access! Only students can delete their review.");
+        }
 
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new RuntimeException("Course not found"));

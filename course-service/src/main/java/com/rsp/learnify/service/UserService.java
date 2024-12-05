@@ -1,5 +1,6 @@
 package com.rsp.learnify.service;
 
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.core.ParameterizedTypeReference;
@@ -51,6 +52,25 @@ public class UserService {
                 .header("Authorization", "Bearer " + token)
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {
+                })
+                .block();
+    }
+
+    public List<String> getEnrolledCourses() throws Exception {
+        String token;
+
+        try {
+            token = httpRequest.getHeader("Authorization").substring(7);
+        } catch (Exception e) {
+            throw new Exception("Authentication token not found!");
+        }
+
+        return webClientBuilder.build()
+                .get()
+                .uri("http://user-service/api/v1/users/get-enrolled-courses")
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<List<String>>() {
                 })
                 .block();
     }

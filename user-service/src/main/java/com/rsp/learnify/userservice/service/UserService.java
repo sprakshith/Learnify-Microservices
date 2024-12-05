@@ -1,5 +1,7 @@
 package com.rsp.learnify.userservice.service;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 import com.rsp.learnify.userservice.dto.UserResponse;
@@ -9,7 +11,6 @@ import com.rsp.learnify.userservice.model.User;
 import com.rsp.learnify.userservice.repository.EnrolmentRepository;
 import com.rsp.learnify.userservice.repository.UserRepository;
 
-import jakarta.persistence.PersistenceException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
@@ -75,8 +76,6 @@ public class UserService {
                     .build();
 
             enrolmentRepository.save(enrolment);
-        } catch (PersistenceException e) {
-            throw new Exception("You are already enrolled in this course!");
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
@@ -102,6 +101,18 @@ public class UserService {
                 .lastname(user.getLastname())
                 .email(user.getEmail())
                 .build();
+    }
+
+    public List<String> getEnrolledCourses() {
+        String token = httpRequest.getHeader("Authorization").substring(7);
+        String email = jwtService.extractUsername(token);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found!"));
+
+        List<Enrolment> enrolments = enrolmentRepository.findByStudentId(user.getId());
+
+        return enrolments.stream().map(Enrolment::getCourseId).toList();
     }
 
 }
