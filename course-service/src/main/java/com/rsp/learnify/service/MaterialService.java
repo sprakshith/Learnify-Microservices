@@ -164,6 +164,19 @@ public class MaterialService {
                 materialRepository.delete(material);
         }
 
+        public List<MaterialResponse> getAllCourseMaterials(String courseId) {
+                Course course = courseRepository.findById(courseId)
+                                .orElseThrow(() -> new RuntimeException("Course not found!"));
+
+                List<Material> materials = course.getMaterials();
+
+                if (materials == null || materials.isEmpty()) {
+                        return List.of();
+                }
+
+                return materials.stream().map(this::mapToMaterialResponse).toList();
+        }
+
         private MaterialResponse mapToMaterialResponse(Material material) {
                 return MaterialResponse.builder()
                                 .id(material.getId())
@@ -181,4 +194,5 @@ public class MaterialService {
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
                 return userLocalTime.format(formatter);
         }
+
 }

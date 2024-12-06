@@ -20,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.rsp.learnify.dto.CourseRequest;
 import com.rsp.learnify.dto.CourseResponse;
+import com.rsp.learnify.dto.FullCourseDetailsResponse;
 import com.rsp.learnify.dto.MaterialResponse;
 import com.rsp.learnify.dto.ReviewRequest;
 import com.rsp.learnify.dto.ReviewResponse;
@@ -55,6 +56,16 @@ public class CourseController {
     @ResponseStatus(HttpStatus.OK)
     public List<CourseResponse> getAllCourses() {
         return courseService.getAllCourses();
+    }
+
+    @GetMapping("/{courseId}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<FullCourseDetailsResponse> getCourseById(@PathVariable String courseId) {
+        try {
+            return new ResponseEntity<>(courseService.getFullCourseDetailsById(courseId), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(FullCourseDetailsResponse.builder().build(), HttpStatus.BAD_REQUEST);
+        }
     }
 
     @GetMapping("/my-courses")

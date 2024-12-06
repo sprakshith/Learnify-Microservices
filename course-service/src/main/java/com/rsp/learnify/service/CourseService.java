@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 
 import com.rsp.learnify.dto.CourseRequest;
 import com.rsp.learnify.dto.CourseResponse;
+import com.rsp.learnify.dto.FullCourseDetailsResponse;
+import com.rsp.learnify.dto.MaterialResponse;
 import com.rsp.learnify.dto.ReviewResponse;
 import com.rsp.learnify.model.Course;
 import com.rsp.learnify.model.Review;
@@ -26,6 +28,8 @@ public class CourseService {
     private final CourseRepository courseRepository;
 
     private final ReviewService reviewService;
+
+    private final MaterialService materialService;
 
     private final UserService userService;
 
@@ -51,6 +55,25 @@ public class CourseService {
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
+    }
+
+    public FullCourseDetailsResponse getFullCourseDetailsById(String courseId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Course not found!"));
+
+        List<ReviewResponse> reviews = getAllReviews(courseId);
+
+        List<MaterialResponse> materials = materialService.getAllCourseMaterials(courseId);
+
+        return FullCourseDetailsResponse.builder()
+                .id(course.getId())
+                .title(course.getTitle())
+                .description(course.getDescription())
+                .teacherId(course.getTeacherId())
+                .updatedOn(formatUpdatedDate(course.getUpdatedDate()))
+                .materials(materials)
+                .reviews(reviews)
+                .build();
     }
 
     public List<CourseResponse> getAllCourses() {
