@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -53,13 +52,11 @@ public class CourseController {
     }
 
     @GetMapping
-    @ResponseStatus(HttpStatus.OK)
     public List<CourseResponse> getAllCourses() {
-        return courseService.getAllCourses();
+        return new ResponseEntity<>(courseService.getAllCourses(), HttpStatus.OK).getBody();
     }
 
     @GetMapping("/{courseId}")
-    @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<FullCourseDetailsResponse> getCourseById(@PathVariable String courseId) {
         try {
             return new ResponseEntity<>(courseService.getFullCourseDetailsById(courseId), HttpStatus.OK);
@@ -69,7 +66,6 @@ public class CourseController {
     }
 
     @GetMapping("/my-courses")
-    @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<List<CourseResponse>> getMyCourses() {
         try {
             return new ResponseEntity<>(courseService.getMyCourses(), HttpStatus.OK);
@@ -79,7 +75,6 @@ public class CourseController {
     }
 
     @GetMapping("/{courseId}/get-teacher-id")
-    @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<String> getTeacherIdByCourseId(@PathVariable String courseId) {
         try {
             return new ResponseEntity<>(courseService.getTeacherIdByCourseId(courseId).toString(), HttpStatus.OK);
@@ -99,11 +94,11 @@ public class CourseController {
     }
 
     @GetMapping("/{courseId}/materials")
-    public List<MaterialResponse> getMaterialsByCourseId(@PathVariable String courseId) {
+    public ResponseEntity<List<MaterialResponse>> getMaterialsByCourseId(@PathVariable String courseId) {
         try {
-            return materialService.getMaterialsByCourseId(courseId);
+            return new ResponseEntity<>(materialService.getMaterialsByCourseId(courseId), HttpStatus.OK);
         } catch (Exception e) {
-            return new ArrayList<>();
+            return new ResponseEntity<>(new ArrayList<>(), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -119,21 +114,19 @@ public class CourseController {
     }
 
     @PostMapping("/{courseId}/reviews")
-    @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<String> createReview(@PathVariable String courseId,
             @RequestBody ReviewRequest reviewRequest) {
         try {
             reviewService.createReview(courseId, reviewRequest);
-            return new ResponseEntity<>("Review added successfully!", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("Review added successfully!", HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
 
     @GetMapping("/{courseId}/reviews")
-    @ResponseStatus(HttpStatus.OK)
-    public List<ReviewResponse> getReviewsByCourseId(@PathVariable String courseId) {
-        return courseService.getAllReviews(courseId);
+    public ResponseEntity<List<ReviewResponse>> getReviewsByCourseId(@PathVariable String courseId) {
+        return new ResponseEntity<>(courseService.getAllReviews(courseId), HttpStatus.OK);
     }
 
     @PutMapping("/{courseId}/reviews/{reviewId}")
