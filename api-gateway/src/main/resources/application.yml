@@ -12,6 +12,10 @@ spring:
           uri: lb://course-service
           predicates:
             - Path=/api/v1/courses,/api/v1/courses/**
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/api/v1/notifications,/api/v1/notifications/**
 eureka:
   client:
     serviceUrl:

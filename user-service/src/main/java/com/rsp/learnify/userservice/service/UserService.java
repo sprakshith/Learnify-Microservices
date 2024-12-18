@@ -1,8 +1,11 @@
 package com.rsp.learnify.userservice.service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import com.rsp.learnify.userservice.dto.UserResponse;
 import com.rsp.learnify.userservice.model.Enrolment;
@@ -17,6 +20,8 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class UserService {
+
+    private final WebClient.Builder webClientBuilder;
 
     private final UserRepository userRepository;
 
@@ -76,6 +81,24 @@ public class UserService {
                     .build();
 
             enrolmentRepository.save(enrolment);
+
+            Map<String, String> requestBody = new HashMap<>();
+            requestBody.put("from", "Course Instructor");
+            requestBody.put("to", user.getFirstname() + " " + user.getLastname());
+            requestBody.put("type", "ENROLMENT");
+            requestBody.put("courseId", courseId);
+            requestBody.put("message",
+                    String.format("You have successfully enrolled in the course with course ID: %s.", courseId));
+
+            webClientBuilder.build()
+                    .put()
+                    .uri("http://notification-service/api/v1/notifications/courses/enrolled")
+                    .header("Authorization", "Bearer " + token)
+                    .bodyValue(requestBody)
+                    .retrieve()
+                    .toBodilessEntity()
+                    .subscribe();
+
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }

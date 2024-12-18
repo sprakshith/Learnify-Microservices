@@ -88,6 +88,16 @@ public class CourseController {
         }
     }
 
+    @GetMapping("/{courseId}/get-teacher-id")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<String> getTeacherIdByCourseId(@PathVariable String courseId) {
+        try {
+            return new ResponseEntity<>(courseService.getTeacherIdByCourseId(courseId).toString(), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
     @PostMapping("/{courseId}/materials/upload")
     public ResponseEntity<String> uploadFile(@PathVariable String courseId, @RequestParam("file") MultipartFile file) {
         try {
