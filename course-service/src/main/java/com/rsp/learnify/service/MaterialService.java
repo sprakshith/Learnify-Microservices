@@ -2,11 +2,7 @@ package com.rsp.learnify.service;
 
 import java.io.InputStream;
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,7 +18,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
 import com.mongodb.client.gridfs.model.GridFSUploadOptions;
@@ -32,7 +27,6 @@ import com.rsp.learnify.model.Material;
 import com.rsp.learnify.repository.CourseRepository;
 import com.rsp.learnify.repository.MaterialRepository;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -47,19 +41,11 @@ public class MaterialService {
 
         private final UserService userService;
 
-        private final WebClient.Builder webClientBuilder;
+        private final NotificationService notificationService;
 
-        private final HttpServletRequest httpRequest;
+        private final DateTimeService dateTimeService;
 
         public void storeMaterial(String courseId, MultipartFile file) throws Exception {
-                String token;
-
-                try {
-                        token = httpRequest.getHeader("Authorization").substring(7);
-                } catch (Exception e) {
-                        throw new Exception("Authentication token not found!");
-                }
-
                 Map<String, Object> userDetails = userService.getUserDetails();
 
                 Course course = courseRepository.findById(courseId)
@@ -99,24 +85,7 @@ public class MaterialService {
 
                         courseRepository.save(course);
 
-                        Map<String, String> requestBody = new HashMap<>();
-                        requestBody.put("from", userDetails.get("id").toString());
-                        requestBody.put("to", "My Students");
-                        requestBody.put("type", "COURSE UPDATED");
-                        requestBody.put("courseId", course.getId());
-                        requestBody.put("message",
-                                        String.format(
-                                                        "Hey! I have added a new material to the course with the title '%s'. Check it out!",
-                                                        course.getTitle()));
-
-                        webClientBuilder.build()
-                                        .post()
-                                        .uri("http://notification-service/api/v1/notifications/courses/updated")
-                                        .header("Authorization", "Bearer " + token)
-                                        .bodyValue(requestBody)
-                                        .retrieve()
-                                        .toBodilessEntity()
-                                        .subscribe();
+                        notificationService.courseUpdate(userDetails.get("id").toString(), courseId, course.getTitle());
 
                 } catch (Exception e) {
                         throw new Exception(e.getMessage());
@@ -180,14 +149,6 @@ public class MaterialService {
         }
 
         public void deleteMaterial(String courseId, String materialId) throws Exception {
-                String token;
-
-                try {
-                        token = httpRequest.getHeader("Authorization").substring(7);
-                } catch (Exception e) {
-                        throw new Exception("Authentication token not found!");
-                }
-
                 Map<String, Object> userDetails = userService.getUserDetails();
 
                 if (!userService.isTeacher()) {
@@ -206,24 +167,7 @@ public class MaterialService {
 
                 materialRepository.delete(material);
 
-                Map<String, String> requestBody = new HashMap<>();
-                requestBody.put("from", userDetails.get("id").toString());
-                requestBody.put("to", "My Students");
-                requestBody.put("type", "COURSE UPDATED");
-                requestBody.put("courseId", course.getId());
-                requestBody.put("message",
-                                String.format(
-                                                "Hey! I have deleted a material from the course with the title '%s'. Check it out!",
-                                                course.getTitle()));
-
-                webClientBuilder.build()
-                                .post()
-                                .uri("http://notification-service/api/v1/notifications/courses/deleted")
-                                .header("Authorization", "Bearer " + token)
-                                .bodyValue(requestBody)
-                                .retrieve()
-                                .toBodilessEntity()
-                                .subscribe();
+                notificationService.courseUpdate(userDetails.get("id").toString(), courseId, course.getTitle());
         }
 
         public List<MaterialResponse> getAllCourseMaterials(String courseId) {
@@ -246,15 +190,8 @@ public class MaterialService {
                                 .type(material.getType())
                                 .fileName(material.getFileName())
                                 .fileId(material.getFileId())
-                                .updatedDate(formatUpdatedDate(material.getUpdatedDate()))
+                                .updatedDate(dateTimeService.formatUpdatedDate(material.getUpdatedDate()))
                                 .build();
-        }
-
-        private String formatUpdatedDate(Instant utcDateTime) {
-                ZoneId userZoneId = ZoneId.systemDefault();
-                ZonedDateTime userLocalTime = utcDateTime.atZone(userZoneId);
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-                return userLocalTime.format(formatter);
         }
 
 }

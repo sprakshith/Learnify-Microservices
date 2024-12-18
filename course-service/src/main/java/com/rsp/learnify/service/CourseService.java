@@ -1,16 +1,11 @@
 package com.rsp.learnify.service;
 
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import com.rsp.learnify.dto.CourseRequest;
 import com.rsp.learnify.dto.CourseResponse;
@@ -21,7 +16,6 @@ import com.rsp.learnify.model.Course;
 import com.rsp.learnify.model.Review;
 import com.rsp.learnify.repository.CourseRepository;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -36,19 +30,11 @@ public class CourseService {
 
     private final UserService userService;
 
-    private final WebClient.Builder webClientBuilder;
+    private final NotificationService notificationService;
 
-    private final HttpServletRequest httpRequest;
+    private final DateTimeService dateTimeService;
 
     public String createCourse(CourseRequest courseRequest) throws Exception {
-        String token;
-
-        try {
-            token = httpRequest.getHeader("Authorization").substring(7);
-        } catch (Exception e) {
-            throw new Exception("Authentication token not found!");
-        }
-
         if (!userService.isTeacher()) {
             throw new Exception("Unauthorized access! Only teachers can create courses.");
         }
@@ -66,24 +52,7 @@ public class CourseService {
 
             courseRepository.save(course);
 
-            Map<String, String> requestBody = new HashMap<>();
-            requestBody.put("from", userDetails.get("id").toString());
-            requestBody.put("to", "My Students");
-            requestBody.put("type", "NEW COURSE");
-            requestBody.put("courseId", course.getId());
-            requestBody.put("message",
-                    String.format(
-                            "I am happy to announce that I have launched a new course with the title '%s'. Check out soon!",
-                            courseRequest.getTitle()));
-
-            webClientBuilder.build()
-                    .post()
-                    .uri("http://notification-service/api/v1/notifications/courses/created")
-                    .header("Authorization", "Bearer " + token)
-                    .bodyValue(requestBody)
-                    .retrieve()
-                    .toBodilessEntity()
-                    .subscribe();
+            notificationService.courseCreation(userDetails.get("id").toString(), course.getId(), course.getTitle());
 
             return String.format("Course with title '%s' successfully created!", courseRequest.getTitle());
         } catch (Exception e) {
@@ -104,7 +73,7 @@ public class CourseService {
                 .title(course.getTitle())
                 .description(course.getDescription())
                 .teacherId(course.getTeacherId())
-                .updatedOn(formatUpdatedDate(course.getUpdatedDate()))
+                .updatedOn(dateTimeService.formatUpdatedDate(course.getUpdatedDate()))
                 .materials(materials)
                 .reviews(reviews)
                 .build();
@@ -134,31 +103,27 @@ public class CourseService {
                 .title(course.getTitle())
                 .description(course.getDescription())
                 .teacherId(course.getTeacherId())
-                .updatedOn(formatUpdatedDate(course.getUpdatedDate()))
+                .updatedOn(dateTimeService.formatUpdatedDate(course.getUpdatedDate()))
                 .build();
     }
 
-    private String formatUpdatedDate(Instant utcDateTime) {
-        ZoneId userZoneId = ZoneId.systemDefault();
-        ZonedDateTime userLocalTime = utcDateTime.atZone(userZoneId);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        return userLocalTime.format(formatter);
-    }
-
     public List<CourseResponse> getMyCourses() throws Exception {
-        Map<String, Object> userDetails = userService.getUserDetails();
+        if (userService.isTeacher()) {
+            Map<String, Object> userDetails = userService.getUserDetails();
 
-        List<Course> courses = courseRepository.findByTeacherId(Integer.parseInt(userDetails.get("id").toString()));
+            List<Course> courses = courseRepository.findByTeacherId(Integer.parseInt(userDetails.get("id").toString()));
 
-        return courses.stream().map(this::mapToCourseResponse).toList();
-    }
+            return courses.stream().map(this::mapToCourseResponse).toList();
+        } else if (userService.isStudent()) {
+            List<String> courseIds = userService.getEnrolledCourses();
 
-    public List<CourseResponse> getEnrolledCourses() throws Exception {
-        List<String> courseIds = userService.getEnrolledCourses();
+            List<Optional<Course>> courses = courseIds.stream().map(courseRepository::findById).toList();
 
-        List<Optional<Course>> courses = courseIds.stream().map(courseRepository::findById).toList();
-
-        return courses.stream().filter(Optional::isPresent).map(course -> mapToCourseResponse(course.get())).toList();
+            return courses.stream().filter(Optional::isPresent).map(course -> mapToCourseResponse(course.get()))
+                    .toList();
+        } else {
+            throw new Exception("Unauthorized access! Only teachers and students can access this resource.");
+        }
     }
 
     public Integer getTeacherIdByCourseId(String courseId) {

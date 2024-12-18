@@ -30,13 +30,6 @@ public class KafkaListeners {
         log.info("Received course updated notification: " + message);
     }
 
-    @KafkaListener(topics = "course-deleted-notification", groupId = "notification-group")
-    public void consumeCourseDeletedNotification(String message) {
-        // For now logging the message. Later if needed, we can send email or SMS
-        // notification.
-        log.info("Received course deleted notification: " + message);
-    }
-
     @KafkaListener(topics = "general-announcement-notification", groupId = "notification-group")
     public void consumeGeneralAnnouncementNotification(String message) {
         // For now logging the message. Later if needed, we can send email or SMS

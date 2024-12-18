@@ -46,15 +46,6 @@ public class NotificationController {
         }
     }
 
-    @PostMapping("/courses/deleted")
-    public void sendCourseDeletedNotifications(@RequestBody NotificationRequest notificationRequest) {
-        try {
-            kafkaProducerService.courseDeletedNotification(notificationRequest);
-        } catch (Exception e) {
-            log.error("Error sending course deleted notification: {}", e.getMessage());
-        }
-    }
-
     @PostMapping("/courses/enrolled")
     public void sendCourseEnrolledNotifications(@RequestBody NotificationRequest notificationRequest) {
         try {

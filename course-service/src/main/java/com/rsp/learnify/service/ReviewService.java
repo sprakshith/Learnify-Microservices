@@ -1,9 +1,6 @@
 package com.rsp.learnify.service;
 
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +25,8 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
 
     private final UserService userService;
+
+    private final DateTimeService dateTimeService;
 
     public void createReview(String courseId, ReviewRequest reviewRequest) throws Exception {
 
@@ -137,15 +136,8 @@ public class ReviewService {
                 .studentId(review.getStudentId())
                 .rating(review.getRating())
                 .comment(review.getComment())
-                .updatedOn(formatUpdatedDate(review.getUpdatedDate()))
+                .updatedOn(dateTimeService.formatUpdatedDate(review.getUpdatedDate()))
                 .build();
-    }
-
-    private String formatUpdatedDate(Instant utcDateTime) {
-        ZoneId userZoneId = ZoneId.systemDefault();
-        ZonedDateTime userLocalTime = utcDateTime.atZone(userZoneId);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        return userLocalTime.format(formatter);
     }
 
 }

@@ -78,16 +78,6 @@ public class CourseController {
         }
     }
 
-    @GetMapping("/enrolled-courses")
-    @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<List<CourseResponse>> getEnrolledCourses() {
-        try {
-            return new ResponseEntity<>(courseService.getEnrolledCourses(), HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(new ArrayList<>(), HttpStatus.BAD_REQUEST);
-        }
-    }
-
     @GetMapping("/{courseId}/get-teacher-id")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<String> getTeacherIdByCourseId(@PathVariable String courseId) {
