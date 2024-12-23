@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "leanify-enrolment", uniqueConstraints = {
+@Table(name = "learnify-enrolment", uniqueConstraints = {
         @UniqueConstraint(columnNames = { "courseId", "studentId" })
 })
 public class Enrolment {

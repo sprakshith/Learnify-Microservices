@@ -25,7 +25,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "leanify-user")
+@Table(name = "learnify-user")
 public class User implements UserDetails {
 
     @Id

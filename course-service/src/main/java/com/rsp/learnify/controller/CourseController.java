@@ -87,7 +87,7 @@ public class CourseController {
     public ResponseEntity<String> uploadFile(@PathVariable String courseId, @RequestParam("file") MultipartFile file) {
         try {
             materialService.storeMaterial(courseId, file);
-            return new ResponseEntity<>("Successfully added material!", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("Successfully added material!", HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
