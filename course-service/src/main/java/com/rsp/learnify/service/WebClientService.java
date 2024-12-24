@@ -28,7 +28,7 @@ public class WebClientService {
     public boolean userHasRole(String role) throws Exception {
         return webClientBuilder.build()
                 .get()
-                .uri("http://user-service/api/v1/users/is-" + role)
+                .uri("http://user-service:8080/api/v1/users/is-" + role)
                 .header("Authorization", "Bearer " + getJWT())
                 .retrieve()
                 .bodyToMono(Boolean.class)
@@ -38,7 +38,7 @@ public class WebClientService {
     public Map<String, Object> getUserDetails() throws Exception {
         return webClientBuilder.build()
                 .get()
-                .uri("http://user-service/api/v1/users/get-user-details")
+                .uri("http://user-service:8080/api/v1/users/get-user-details")
                 .header("Authorization", "Bearer " + getJWT())
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {
@@ -49,7 +49,7 @@ public class WebClientService {
     public List<String> getEnrolledCourses() throws Exception {
         return webClientBuilder.build()
                 .get()
-                .uri("http://user-service/api/v1/users/get-enrolled-courses")
+                .uri("http://user-service:8080/api/v1/users/get-enrolled-courses")
                 .header("Authorization", "Bearer " + getJWT())
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<List<String>>() {

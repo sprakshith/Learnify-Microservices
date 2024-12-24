@@ -24,7 +24,7 @@ public class NotificationService {
                         "I am happy to announce that I have launched a new course with the title '%s'. Check out soon!",
                         courseTitle));
 
-        String postUri = "http://notification-service/api/v1/notifications/courses/created";
+        String postUri = "http://notification-service:8080/api/v1/notifications/courses/created";
 
         webClientService.sendNotification(requestBody, postUri);
     }
@@ -39,7 +39,7 @@ public class NotificationService {
                 String.format("I have updated the course with the title '%s'. Check out the changes!",
                         courseTitle));
 
-        String postUri = "http://notification-service/api/v1/notifications/courses/updated";
+        String postUri = "http://notification-service:8080/api/v1/notifications/courses/updated";
 
         webClientService.sendNotification(requestBody, postUri);
     }
