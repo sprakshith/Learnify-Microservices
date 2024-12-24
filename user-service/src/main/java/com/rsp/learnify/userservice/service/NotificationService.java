@@ -22,7 +22,7 @@ public class NotificationService {
         requestBody.put("message",
                 String.format("You have successfully enrolled in the course with the title: %s.", courseTitle));
 
-        String postUri = "http://notification-service/api/v1/notifications/courses/enrolled";
+        String postUri = "http://notification-service:8080/api/v1/notifications/courses/enrolled";
 
         webClientService.sendNotification(requestBody, postUri);
     }
