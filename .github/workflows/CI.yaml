@@ -43,40 +43,42 @@ jobs:
           echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
           docker push ${{ secrets.DOCKER_USERNAME }}/learnify-user-service:latest
 
-  # build-course-service:
-  #   runs-on: ubuntu-24.04
-  #   steps:
-  #     - name: Checkout Code
-  #       uses: actions/checkout@v3
+  build-course-service:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-  #     - name: Set up JDK 21
-  #       uses: actions/setup-java@v4
-  #       with:
-  #         java-version: '21'
-  #         distribution: 'temurin'
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
 
-  #     - name: Cache Maven packages
-  #       uses: actions/cache@v4
-  #       with:
-  #         path: ~/.m2/repository
-  #         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-  #         restore-keys: |
-  #           ${{ runner.os }}-maven-
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
 
-  #     - name: Build jar and Run tests for course-service
-  #       run: |
-  #         cd course-service
-  #         mvn clean package -DskipTests
-  #         mvn test
-  #         docker build -t ${{ secrets.DOCKER_USERNAME }}/learnify-course-service:latest .
-  #         echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-  #         docker push ${{ secrets.DOCKER_USERNAME }}/learnify-course-service:latest
-  #       env:
-  #         MONGO_USERNAME: ${{ secrets.MONGO_USERNAME }}
-  #         MONGO_PW: ${{ secrets.MONGO_PW }}
-  #         MONGO_HOST: ${{ secrets.MONGO_HOST }}
-  #         MONGO_PORT: 27017
-  #         MONGO_DATABASE: course-service
+      - name: Build Jar
+        run: |
+            cd course-service
+            mvn clean package -DskipTests
+
+      - name: Run Unit Tests
+        run: |
+            cd course-service
+            mvn test "-Dspring.profiles.active=test"
+
+      - name: Build and Push Docker Image
+        run: |
+          cd course-service
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/learnify-course-service:latest .
+          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+          docker push ${{ secrets.DOCKER_USERNAME }}/learnify-course-service:latest
 
   # build-notification-service:
   #   runs-on: ubuntu-24.04
