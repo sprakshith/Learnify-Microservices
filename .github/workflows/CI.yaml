@@ -106,4 +106,4 @@ jobs:
           docker build -t ${{ secrets.DOCKER_USERNAME }}/learnify-notification-service:latest .
           docker push ${{ secrets.DOCKER_USERNAME }}/learnify-notification-service:latest
         env:
-          BOOTSTRAP_SERVERS: {{ secrets.BOOTSTRAP_SERVERS }}
+          BOOTSTRAP_SERVERS: ${{ secrets.BOOTSTRAP_SERVERS }}
