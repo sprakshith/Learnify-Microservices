@@ -9,41 +9,49 @@ on:
       - master
 
 jobs:
-  # build-user-service:
-  #   runs-on: ubuntu-24.04
-  #   steps:
-  #     - name: Checkout Code
-  #       uses: actions/checkout@v3
+  build-user-service:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-  #     - name: Set up JDK 21
-  #       uses: actions/setup-java@v4
-  #       with:
-  #         java-version: '21'
-  #         distribution: 'temurin'
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
 
-  #     - name: Cache Maven packages
-  #       uses: actions/cache@v4
-  #       with:
-  #         path: ~/.m2/repository
-  #         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-  #         restore-keys: |
-  #           ${{ runner.os }}-maven-
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
 
-  #     - name: Build jar and Run tests for user-service
-  #       run: |
-  #         cd user-service
-  #         mvn clean package -DskipTests
-  #         mvn test
-  #         docker build -t ${{ secrets.DOCKER_USERNAME }}/learnify-user-service:latest .
-  #         echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-  #         docker push ${{ secrets.DOCKER_USERNAME }}/learnify-user-service:latest
-  #       env:
-  #         SECRET_KEY: ${{ secrets.SECRET_KEY }}
-  #         MYSQL_DB: authentication
-  #         MYSQL_HOST: ${{ secrets.MYSQL_HOST }}
-  #         MYSQL_PORT: 3306
-  #         MYSQL_USER: ${{ secrets.MYSQL_USER }}
-  #         MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+      - name: Build Jar
+        run: |
+            cd user-service
+            mvn clean package -DskipTests
+
+      - name: Run Unit Tests
+        run: |
+            cd user-service
+            mvn test
+        env:
+          SECRET_KEY: DUMMY_SECRET_KEY
+          MYSQL_DB: authentication
+          MYSQL_HOST: localhost
+          MYSQL_PORT: 3306
+          MYSQL_USER: DUMMY_USER
+          MYSQL_PASSWORD: DUMMY_PASSWORD
+
+      - name: Build and Push Docker Image
+        run: |
+          cd user-service
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/learnify-user-service:latest .
+          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+          docker push ${{ secrets.DOCKER_USERNAME }}/learnify-user-service:latest
 
   # build-course-service:
   #   runs-on: ubuntu-24.04
@@ -80,33 +88,33 @@ jobs:
   #         MONGO_PORT: 27017
   #         MONGO_DATABASE: course-service
 
-  build-notification-service:
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+  # build-notification-service:
+  #   runs-on: ubuntu-24.04
+  #   steps:
+  #     - name: Checkout Code
+  #       uses: actions/checkout@v3
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
+  #     - name: Set up JDK 21
+  #       uses: actions/setup-java@v4
+  #       with:
+  #         java-version: '21'
+  #         distribution: 'temurin'
 
-      - name: Cache Maven packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
+  #     - name: Cache Maven packages
+  #       uses: actions/cache@v4
+  #       with:
+  #         path: ~/.m2/repository
+  #         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+  #         restore-keys: |
+  #           ${{ runner.os }}-maven-
 
-      - name: Build jar and Run tests for notification-service
-        run: |
-          cd notification-service
-          mvn clean package -DskipTests
-          mvn test
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/learnify-notification-service:latest .
-          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-          docker push ${{ secrets.DOCKER_USERNAME }}/learnify-notification-service:latest
-        env:
-          BOOTSTRAP_SERVERS: ${{ secrets.BOOTSTRAP_SERVERS }}
+  #     - name: Build jar and Run tests for notification-service
+  #       run: |
+  #         cd notification-service
+  #         mvn clean package -DskipTests
+  #         mvn test
+  #         docker build -t ${{ secrets.DOCKER_USERNAME }}/learnify-notification-service:latest .
+  #         echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+  #         docker push ${{ secrets.DOCKER_USERNAME }}/learnify-notification-service:latest
+  #       env:
+  #         BOOTSTRAP_SERVERS: ${{ secrets.BOOTSTRAP_SERVERS }}
